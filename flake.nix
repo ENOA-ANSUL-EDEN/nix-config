@@ -65,7 +65,7 @@
               # host specific config
               { config.networking.hostName = host; }
               (./hosts + "/${host}")
-              (inputs.secrets.hostSecrets.${host})
+              #(inputs.secrets.hostSecrets.${host})
 
               # my modules
               ./modules/system
@@ -130,9 +130,12 @@
       flake = false;
     };
 
-    secrets = {
-      url = "git+file:///etc/nixos.secrets";
-      inputs.nixpkgs.follows = "nixpkgs";
-    };
+    # secrets = {
+    #   url = "git+file:///etc/nixos.secrets";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
+
+    # disko.url = "github:nix-community/disko";
+    # disko.inputs.nixpkgs.follows = "nixpkgs";
   };
 }
