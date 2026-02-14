@@ -1,0 +1,92 @@
+#+title: NixOS Config
+#+author: Emmet
+
+[[https://gitlab.com/librephoenix/nixos-config][Main Repo Link (GitLab)]]
+
+[[https://github.com/librephoenix/nixos-config][Mirror Repo Link (GitHub)]]
+
+[[https://codeberg.org/librephoenix/nixos-config][Mirror Repo Link (Codeberg)]]
+
+** What is this repository?
+These are my dotfiles (configuration files) for my NixOS setup(s).
+
+Here is my main setup:
+[[desktop.png]]
+
+** Themes
+[[https://github.com/danth/stylix#readme][Stylix]] (and [[https://github.com/SenchoPens/base16.nix#readme][base16.nix]], of course) is amazing, allowing you to theme your entire system with base16-themes.
+
+Using this I have [[./modules/themes][a lot of themes]] (I add more sometimes) I can switch between on-the-fly. Visit the [[./modules/themes][themes directory]] for more info and screenshots!
+
+** Modules
+Separate Nix files can be imported as modules using an import block:
+#+BEGIN_SRC nix
+imports = [ ./import1.nix
+            ./import2.nix
+            ...
+          ];
+#+END_SRC
+
+This conveniently allows configurations to be (*cough cough) /modular/ (ba dum, tssss).
+
+I have my modules separated into three subdirectories:
+- System-level - stored in the [[./modules/system][system directory]]
+- User-level - stored in the [[./modules/user][user directory]]
+
+More detailed information on these specific modules are in the [[./system][system directory]] and [[./user][user directory]] respectively.
+
+** Install
+I wrote some reinstall notes for myself [[./install.org][here (install.org)]].
+
+Check them out if you'd like to try out my config in a VM or base your config on mine.
+
+** Patches
+In some cases, since I use =nixpgs-unstable=, I must patch nixpkgs. This can be done inside of a flake via:
+#+BEGIN_SRC nix
+nixpkgs-patched = (import nixpkgs { inherit system; }).applyPatches {
+  name = "nixpkgs-patched";
+  src = nixpkgs;
+  patches = [
+              ./example-patch.nix
+              (builtins.fetchurl {
+                url = "https://asdf1234.patch";
+                sha256 = "sha256:qwerty123456...";
+              })
+            ];
+};
+
+# configure pkgs
+pkgs = import nixpkgs-patched { inherit system; };
+
+# configure lib
+lib = nixpkgs.lib;
+#+END_SRC
+
+Patches can either be local or remote, so you can even import unmerged pull requests by using =fetchpatch= and the raw patch url, i.e: https://github.com/NixOS/nixpkgs/pull/example.patch.
+
+I currently curate patches local to this repo in the [[./patches][patches]] directory.
+
+** Hosts
+Configurations for all my machines are in [[./hosts][hosts]].
+
+** Nix Wrapper Script
+Some Nix commands are confusing, really long to type out, or require me to be in the directory with my dotfiles. To solve this, I wrote a [[./modules/system/phoenix][wrapper script called phoenix]], which calls various scripts in the root of this directory.
+
+TLDR:
+- =phoenix sync= - Synchronize system state with config
+- =phoenix build= - Build all host configurations and push results to attic (requires attic config to be setup)
+- =phoenix update= - Update all flake inputs without synchronizing system and home-manager states
+  - =phoenix update INPUT= - Update only the specified =INPUT= (see inputs in [[./flake.nix][flake.nix]])
+- =phoenix refresh= - Call synchronization posthooks (mainly to refresh stylix and some dependent daemons)
+- =phoenix pull= - Pull changes from upstream git and attempt to merge local changes (I use this to update systems other than my main system)
+- =phoenix lock= - Ensure that all "system-level" files cannot be edited by an unprivileged user
+- =phoenix unlock= - Relax permissions so all dotfiles can be edited by a normal user (use temporarily for git or other operations)
+- =phoenix gc= - Garbage collect the system and user nix stores
+  - =phoenix gc full= - Delete everything not currently in use
+  - =phoenix gc 15d= - Delete everything older than 15 days
+  - =phoenix gc 30d= - Delete everything older than 30 days
+  - =phoenix gc Xd= - Delete everything older than X days
+
+** Star History
+Didn't think this would get that many [[https://star-history.com/#librephoenix/nixos-config&Date][stars on GitHub]], yet here we are:
+[[https://api.star-history.com/svg?repos=librephoenix/nixos-config&type=Date.png]]

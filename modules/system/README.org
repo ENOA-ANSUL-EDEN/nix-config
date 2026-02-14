@@ -1,0 +1,14 @@
+#+title: System-level Nix Modules
+#+author: Emmet
+
+Separate Nix files can be imported as modules using an import block:
+#+BEGIN_SRC nix
+imports = [ import1.nix
+            import2.nix
+            ...
+          ];
+#+END_SRC
+
+Modules in this directory are used are system-level (root) configurations.
+
+# TODO add list of all options

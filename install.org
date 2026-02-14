@@ -1,0 +1,71 @@
+#+title: Install
+#+author: Emmet
+
+These are just some simple install notes for myself (in-case I have to reinstall unexpectedly). You could also use these to try out my config in a VM.
+
+** Manual Install Procedure
+Currently, the only supported install method is installing manually. This way yuo can see all the steps (kind of like an Arch install before the archinstall script existed), you can follow this following procedure:
+
+*** Clone Repo and Modify Configuration
+Start by cloning the repo to =/etc/nixos=:
+#+BEGIN_SRC sh :noeval
+sudo mv /etc/nixos /etc/nixos.bkp
+git clone https://gitlab.com/librephoenix/nixos-config.git /etc/nixos
+#+END_SRC
+
+Any custom directory should also work:
+#+BEGIN_SRC sh :noeval
+git clone https://gitlab.com/librephoenix/nixos-config.git /your/custom/directory
+#+END_SRC
+
+If you install to a custom directory, make sure to edit =systemSettings.dotfilesDir= in the system configuration, or else the [[./system/bin/phoenix.nix][phoenix wrapper script]] won't work.
+#+BEGIN_SRC nix :noeval
+# somewhere in system-level config:
+{ config, lib, pkgs, ...}:
+{
+  systemSettings.dotfilesDir = "/your/custom/directory";
+}
+#+END_SRC
+
+To configure a new system, navigate to the [[./hosts][hosts]] directory and copy the [[./hosts/TEMPLATE][TEMPLATE]] directory. Name the copy whatever you want the new hostname to be (needs to match the hostname exactly).
+
+Next, configure the resulting =configuration.nix= and =home.nix= with the available options. Make sure to change all references to =USERNAME=, =NAME= and =EMAIL= for your desired user(s).
+
+Next, you must copy or generate the new system's hardware-config into your specific host's =hardware-configuration.nix=. To get the hardware configuration on a new system, either copy from =/etc/nixos.bkp/hardware-configuration.nix= or run:
+#+BEGIN_SRC sh :noeval
+sudo nixos-generate-config --show-hardware-config > /etc/nixos/hosts/YOURHOSTNAMEHERE/hardware-configuration.nix
+#+END_SRC
+
+Note: If you're installing this to a VM, Hyprland won't work unless 3D acceleration is enabled.
+
+Disclaimer: If you copy my =ori= host config to setup a sever with NixOS, /MAKE SURE YOU CHANGE OR REMOVE THE PUBLIC SSH KEYS UNLESS YOU WANT ME TO BE ABLE TO SSH INTO YOUR SERVER. YOU CAN CHANGE OR REMOVE THE SSH KEY IN THE RELEVANT CONFIGURATION.NIX/ (see [[./hosts/ori/configuration.nix][configuration.nix]]).
+
+*** Clone and Setup Secrets Config Repo
+Clone and setup the =/etc/nixos.secrets= directory using my template [[https://gitlab.com/librephoenix/nixos-secrets-template][repo]]. Intructions on how to set it up can be found in that repository. This will allow you to track your main config to a public repo, without exposing /all/ of your configuration options publically.
+
+If you'd rather not set that up, you can just delete all references to the =secrets= input in the =flake.nix= and it will stop complaining about the input not being found!
+
+*** Rebuild and Switch System Config
+Once the variables are set, then switch into the system configuration by running:
+#+BEGIN_SRC sh :noeval
+sudo nixos-rebuild switch --flake ~/.dotfiles#system
+#+END_SRC
+or for your own custom directory:
+#+BEGIN_SRC sh :noeval
+sudo nixos-rebuild switch --flake /your/custom/directory#system
+#+END_SRC
+
+Subsequent rebuilds can now use my =phoenix= wrapper script to rebuild:
+#+BEGIN_SRC sh :noeval
+phoenix sync
+#+END_SRC
+
+** FAQ
+*** I installed this to a VM and when I log in, it crashes and sends me back to the login manager (SDDM)?
+Enable 3D acceleration for your virtual machine. Hyprland doesn't work without it.
+
+*** It's complaining about not finding an input called secrets?
+Either setup the =/etc/nixos.secrets= directory using my template [[https://gitlab.com/librephoenix/nixos-secrets-template][repo]] or delete all references to the =secrets= input in the =flake.nix=!
+
+*** You used to have an auto-install script! Where did it go?
+My old [[https://www.youtube.com/watch?v=Dm11dcJ0vWY][auto-install script]] was kind of cool, but I found it wasn't really stable (even for me). I'll probably revisit this at some point (looking at you [[https://github.com/nix-community/nixos-anywhere][nixos-everywhere]] and [[https://github.com/nix-community/disko][disko]]).

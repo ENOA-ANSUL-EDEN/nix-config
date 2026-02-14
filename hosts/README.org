@@ -1,0 +1,11 @@
+#+title: Machines
+
+This directory contains config for each of my machines. 
+
+In this directory you'll find:
+- [[./snowfire][snowfire]] - My main machine (gaming laptop)
+- [[./duskfall][duskfall]] - An old thinkpad I use occasionally
+- [[./stardust][stardust]] - My wife's laptop
+- [[./zenith][zenith]] - My work laptop
+- [[./ori][ori]] - My homelab server host
+- [[./TEMPLATE][TEMPLATE]] - Template files to use for a new host
