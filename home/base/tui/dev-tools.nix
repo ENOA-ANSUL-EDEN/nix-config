@@ -51,6 +51,8 @@
     # need to run `conda-shell` before using command `conda`
     # conda is not available for MacOS
     conda
+
+    radare2
   ];
 
   programs = {
