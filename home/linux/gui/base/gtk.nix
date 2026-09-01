@@ -16,12 +16,12 @@
     size = 24;
   };
 
-  # set dpi for 4k monitor
+  # set dpi for 1080 monitor
   xresources.properties = {
     # dpi for Xorg's font
-    "Xft.dpi" = 150;
+    "Xft.dpi" = 96;
     # or set a generic dpi
-    "*.dpi" = 150;
+    "*.dpi" = 96;
   };
 
   # gtk's theme settings, generate files:
