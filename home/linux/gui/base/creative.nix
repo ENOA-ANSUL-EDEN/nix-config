@@ -24,13 +24,13 @@
 
       # Astronomy
       stellarium # See what you can see with your eyes, binoculars or a small telescope.
-      celestia # Real-time 3D simulation of space, travel throughout the solar system.
+      # celestia # Real-time 3D simulation of space, travel throughout the solar system.
 
       # office
-      libreoffice-qt-still
-      hunspell # spell check for libreoffice
-      hunspellDicts.en_US # USA English
-      hyphenDicts.en_GB # British English
+      # libreoffice-qt-still
+      # hunspell # spell check for libreoffice
+      # hunspellDicts.en_US # USA English
+      # hyphenDicts.en_GB # British English
     ]
     ++ (lib.optionals pkgs.stdenv.isx86_64 [
       # https://github.com/edolstra/nix-warez/blob/master/blender/flake.nix
@@ -63,13 +63,14 @@
         input-overlay
         obs-multi-rtmp
         obs-source-clone
-        obs-shaderfilter
+        # obs-shaderfilter
         obs-source-record
         obs-livesplit-one
         looking-glass-obs
         obs-vintage-filter
         obs-command-source
-        obs-move-transition
+	# https://github.com/NixOS/nixpkgs/pull/556032#issue-5233671624
+        # obs-move-transition
         obs-backgroundremoval
         # advanced-scene-switcher
         obs-pipewire-audio-capture
