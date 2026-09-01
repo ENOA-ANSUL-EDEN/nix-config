@@ -1,0 +1,5 @@
+patch:
+  # schema/name: 💎琉璃·延迟顶
+  embeded_cands/+:
+    first_format: "${Stash}${Code}${候選}"
+    next_format: ""

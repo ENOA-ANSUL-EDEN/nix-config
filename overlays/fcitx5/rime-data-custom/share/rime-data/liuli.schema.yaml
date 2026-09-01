@@ -1,0 +1,496 @@
+# Rime schema settings
+# encoding: utf-8
+
+schema:
+  schema_id: liuli
+  name: 💎·琉璃
+  version: v202602152325
+  author:
+    - 宇浩
+    - 阿吉
+    - forFudan
+    - 王牌饼干
+    - 荒
+  description: |
+    琉璃(七三顶)，意为“美玉”，象征纯净与美好。Rime输入法的这款“琉璃”方案，旨在为用户提供一种清晰、优雅且高效的中文输入体验。
+    它融合了现代输入法的先进技术与传统汉字文化的精髓，力求在输入速度与准确性之间达到最佳平衡。
+    无论是日常交流还是专业写作，琉璃方案都能助您轻松表达思想，畅游文字的海洋。  ——By DeepSeek
+  dependencies:
+    - yuhao_pinyin
+    # 基础码表
+    - liuli.base
+    # 全码词库
+    - liuli.words
+    # 符號碼表
+    - liuli.symbols
+
+switches:
+  - name: traditionalization
+    states: [简保持, 简转繁]
+    reset: 0
+  - name: division
+    states: [ 无注解, 显示拆分 ]
+    reset: 0
+  - options: [ hwang, sentence, single_char_delay, single_char ]
+    states: [ 智能延迟顶, 整句, 五三顶, 三定 ]
+    abbrev: [七, 五, 三]
+    reset: 0
+  - options: [ full.word, full.char, full.off ]
+    states: [ 字词同出, 禁出词组, 禁出四码 ]
+    reset: 0
+  - name: embeded_cands
+    states: [ 普通, 嵌入 ]
+    reset: 1
+  - name: completion
+    states: [ 简洁, 预测 ]
+    reset: 0
+  - options: [ charset.all, charset.freqly ]
+    states: [ 全字集, 常用字 ]
+    reset: 0
+  - name: emoji
+    states: [ 🈚, 🈶 ]
+    reset: 1
+  - name: ivd_map
+    states: [ NoIVD, IVD ]
+    reset: 0
+  - name: ascii_mode
+    states: [ 汉字, 西文 ]
+    reset: 0
+  - name: ascii_punct
+    states: [ '，。', '，．' ]
+    reset: 0
+  - name: full_shape
+    states: [ 半, 全 ]
+    reset: 0
+  - name: division_reverse
+    reset: 1
+
+engine:
+  processors:
+    - lua_processor@*liuli.core_processor@ll
+    - ascii_composer
+    - recognizer
+    - key_binder
+    - speller
+    - punctuator
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - punct_segmentor
+  translators:
+    - punct_translator
+    - reverse_lookup_translator
+    # 符號翻譯器
+    - table_translator@symbols
+    # 上次上屏历史
+    - history_translator@history
+    # 主翻译器
+    - lua_translator@*liuli.core_translator@ll
+    - lua_translator@*liuli.stats_3
+  filters:
+    - simplifier
+    - simplifier@emoji
+    # 候选去重
+    - uniquifier
+    # 简转繁
+    - simplifier@traditionalize
+    # 拆分提示
+    - simplifier@division
+    - simplifier@division_reverse
+    - simplifier@ivd_map
+    # 嵌入候选
+    - lua_filter@*liuli.embeded_cands@embeded_cands
+
+speller:
+  alphabet: "qwertyuiopasdfghjklzxcvbnm /`|.:"
+  initials: "qwertyuiopasdfghjklzxcvbnm/`"
+  auto_select: true
+  auto_select_unique_candidate: true
+  algebra:
+
+# 重复上次上屏
+history:
+  input: '`'
+  size: 1
+  initial_quality: 1
+
+traditionalize:
+  tags: [abc, reverse_lookup]
+  option_name: traditionalization
+  opencc_config: s2t.json
+  tips: all
+  comment_format:
+    - xform/^/〔/
+    - xform/$/〕/
+
+division:
+  option_name: division
+  opencc_config: liuli_div.json
+  tips: all
+  show_in_comment: true
+  comment_format:
+    - xform/\(([^,]*),([^,]*),([^,]*),([^,]*)\)/($1·$2)/
+    - xlit/\{\}/\⟨\⟩/
+  tags: [abc]
+
+division_reverse:
+  __include: division
+  option_name: division_reverse
+  tags: [reverse_lookup]
+
+# 拼音反查
+reverse_lookup:
+  tag: reverse_lookup
+  prefix: "`"
+  dictionary: yuhao_pinyin
+  preedit_format:
+    - xform/^`//
+  comment_format:
+    - "xform/^/(/"
+    - "xform/$/)/"
+
+emoji:
+  opencc_config: emoji.json
+  option_name: emoji
+  tips: all
+
+ivd_map:
+  option_name: ivd_map
+  opencc_config: moji_map.json
+  tags: [ grave ]
+
+# 符號翻譯器
+symbols:
+  tag: symbols
+  prefix: "/"
+  dictionary: liuli.symbols
+  prism: liuli.symbols
+  enable_user_dict: false
+  preedit_format:
+    - xform|^/||
+
+ll:
+  funckeys:
+    # under linux, cat /usr/include/X11/keysymdef.h
+    # or visit: https://gitlab.freedesktop.org/xorg/proto/xorgproto/-/blob/master/include/X11/keysymdef.h
+    # frequently used:
+    # - functional keys: escape: 0xff1b; return: 0xff0d; tabular: 0xff09; CapsLock: 0xffe5;
+    #define XK_BackSpace                     0xff08  /* U+0008 BACKSPACE */
+    #define XK_Tab                           0xff09  /* U+0009 CHARACTER TABULATION */
+    #define XK_Linefeed                      0xff0a  /* U+000A LINE FEED */
+    #define XK_Clear                         0xff0b  /* U+000B LINE TABULATION */
+    #define XK_Return                        0xff0d  /* U+000D CARRIAGE RETURN */
+    #define XK_Pause                         0xff13  /* Pause, hold */
+    #define XK_Scroll_Lock                   0xff14
+    #define XK_Sys_Req                       0xff15
+    #define XK_Escape                        0xff1b  /* U+001B ESCAPE */
+    #define XK_Delete                        0xffff  /* U+007F DELETE */
+    #define XK_Shift_L                       0xffe1  /* Left shift */
+    #define XK_Shift_R                       0xffe2  /* Right shift */
+    #define XK_Control_L                     0xffe3  /* Left control */
+    #define XK_Control_R                     0xffe4  /* Right control */
+    #define XK_Caps_Lock                     0xffe5  /* Caps lock */
+    #define XK_Shift_Lock                    0xffe6  /* Shift lock */
+    #define XK_Meta_L                        0xffe7  /* Left meta */
+    #define XK_Meta_R                        0xffe8  /* Right meta */
+    #define XK_Alt_L                         0xffe9  /* Left alt */
+    #define XK_Alt_R                         0xffea  /* Right alt */
+    #define XK_Super_L                       0xffeb  /* Left super */
+    #define XK_Super_R                       0xffec  /* Right super */
+    #define XK_Hyper_L                       0xffed  /* Left hyper */
+    #define XK_Hyper_R                       0xffee  /* Right hyper */
+    # - ascii characters: space: 0x20; semicolon: 0x3b; slash: 0x2f; grave: 0x60; ': 0x27; [: 0x5b; ]: 0x5d;
+    macro: [ 0x2f ]      # 以這些字符開頭, 則認爲是宏調用
+    primary: [ 0x20 ]    # 首要簡碼鍵
+    secondary: [ 0x3b ]  # 次要簡碼鍵
+    tertiary: [ 0x27 ]   # 次次簡碼鍵
+    fullci: [ 0xff09 ]   # 碼長爲四時, 輸入此串上屏首選
+    break: [ 0xff09 ]    # 打斷施法
+    repeat: [ 0x60 ]     # 重複上屏
+    clearact: [ 0xff0d, 0xff1b ] # 清除活動編碼
+    # 自定義宏
+    # 先为宏命名, 如 *mymacro*, 则將其添加到 *macros* 下,
+    # 再在 *mymacro* 下添加若干候選宏, 每個候選宏都需指定一個 *type*.
+    # 当前支持的宏類型:
+    # *tip*:    {type: tip,    name: display,     text: commit},                     其中 *text* 为可選項.
+    # *switch*: {type: switch, name: switch_name, states: [off_display,on_display]}, 類似 *schema/switches*.
+    # *radio*:  {type: radio,  names: [s1,s2,s3], states: [d1,d2,d3]},               類似 *schema/switches* 之 *options*.
+    # *shell*:  {type: shell,  name: display,     cmd: shell_cmd,   text: true},     選中时執行 *shell_cmd* 命令, *text* 可選, 設为 true 時收集並提交命令輸出. 可選的額外參數 *hijack* 爲 true 時, 攔截所有 *ascii* 輸入, 主要是數字鍵.
+    # *eval*:   {type: eval,   name: display,     expr: "local a='bar'; return a"},  其中 *name* 为可選項, *expr* 必須是個 *return* 語句, 蓋 *lua* 將以 "function() <expr> end" 方式組裝函數並調用.
+    # 例:
+    # macros:
+    #   mymacro:
+    #     - type: tip
+    #       name: 僅提示
+    #     - type: tip
+    #       name: 快捷短語
+    #       text: 這是短語内容
+    #     - type: switch
+    #       name: ascii_mode
+    #       states: [ 漢字, 英文 ]
+    #     - type: shell
+    #       name: 執行shell命令
+    #       cmd: /bin/sh -c "date >/tmp/date.txt"
+    #     - type: eval
+    #       expr: return tostring(os.time())
+  mappers:
+    # 常用字過濾器
+    - option_name: charset.freqly
+      expr: return require("liuli.custom").freq_filter()
+  macros:
+    help:
+      - { type: tip, name: ❖配置中心 }
+      - { type: switch, name: traditionalization, states: [☐简保持, ☑简转繁] }
+      - { type: radio, names: [ hwang, sentence, single_char_delay, single_char ], states: [ ■智能延迟顶, □整句, □五三顶, □三定 ] }
+      - { type: radio, names: [ full.word, full.char, full.off ], states: [ ☑☑字词同出, ☐☑禁出词组, ☐☐禁出四码 ] }
+      - { type: switch, name: embeded_cands, states: [ ☐嵌入, ☑嵌入 ] }
+      - { type: switch, name: completion, states: [ □简洁, ■补全 ] }
+      - { type: switch, name: division, states: [☐无注解, ☑有注解] }
+    date:
+      - { type: eval, name: ☀日期, expr: return os.date("%Y%m%d") }
+      - { type: eval, name: ☀日期(分隔), expr: return os.date("%Y-%m-%d") }
+      - { type: eval, name: ⛅年月日, expr: return os.date("%Y年%m月%d日") }
+    time:
+      - { type: eval, name: Ⓣ时间, expr: return os.date("%Y%m%d%H%M") }
+      - { type: eval, name: ⌚时间(分隔), expr: return os.date("%H:%M:%S") }
+      - { type: eval, name: ⏰时分秒, expr: return os.date("%H时%M分%S秒") }
+      - { type: eval, name: Ⓢ时间戳, expr: return tostring(os.time()) }
+    trad:
+      - { type: switch, name: traditionalization, states: [☐简保持, ☑简转繁] }
+    div:
+      - type: switch
+        name: division
+        states: ["□无注解", "■显示拆分·编码"]
+    embed:
+      - { type: switch, name: embeded_cands, states: [ ☐嵌入编码, ☑嵌入候选 ] }
+    full:
+      - type: radio
+        names: [ full.word, full.char, full.off ]
+        states: [ "☑☑字词同出: 显示所有候选", "☐☑禁出词组: 隐藏词语候选", "☐☐禁出四码: 隐藏四码候选" ]
+    smart:
+      - { type: radio, names: [ hwang, sentence, single_char_delay, single_char ], states: [ ■智能延迟顶, □整句, □五三顶, □三定 ] }
+    comp:
+      - type: switch
+        name: completion
+        states: [ "□简洁模式: 不显示编码预测结果", "■自动补全: 显示编码预测结果" ]
+    charset:
+      - type: radio
+        names: [ charset.all, charset.freqly ]
+        states: [ "□全CJK字集: 无过滤", "■常用字集: 过滤非常用字" ]
+    emo:
+      - type: switch
+        name: emoji
+        states: [ "Emoji: 停用", "Emoji: 启用" ]
+    ivd:
+      - type: switch
+        name: ivd_map
+        states: [ "异字选择器: 停用", "异体字选择器: 启用" ]
+    
+    #  repo:
+    #    - type: tip
+    #      name: 訪問倉庫
+    #    - type: shell
+    #      name: ⚛琉璃
+    #      cmd: url="https://github.com/hertz-hwang/wf-smll" &&
+    #        type open && open "${url}" ||
+    #        type xdg-open && xdg-open "${url}" ||
+    #        echo "${url}"
+
+    quick:
+      - type: tip
+        name: 快捷短語
+      - type: tip
+        name: ☎邮箱
+        text: hertz.hwang@88.com
+      - type: tip
+        name: ☏QQ群
+        text: "1012245282"
+      - type: shell
+        name: 💎琉璃
+        cmd: url="https://hertz-hwang.github.io/hao/Introduction-liuli.html" &&
+          type open && open "${url}" ||
+          type xdg-open && xdg-open "${url}" ||
+          echo "${url}"
+
+    calc:
+      - type: eval
+        hijack: true
+        expr: return require("liuli.custom").easy_calc()
+
+    smart:
+      - type: eval
+        name: ⇪词典载入
+        expr: return LlCore.word_trie:load_dict() or ""
+      - type: eval
+        name: ⌫清空
+        expr: return LlCore.word_trie:clear_dict() or ""
+      - type: eval
+        name: ↪导出
+        expr: return require("liuli.custom").export_smart()
+      - type: eval
+        name: ↩导入
+        expr: return require("liuli.custom").import_smart()
+
+    addsmart:
+      - type: eval
+        hijack: true
+        expr: return require("liuli.custom").add_smart()
+
+    a:
+      - type: eval
+        hijack: true
+        expr: return require("liuli.custom").add_smart()
+
+    delsmart:
+      - type: eval
+        hijack: true
+        expr: return require("liuli.custom").del_smart()
+
+    d:
+      - type: eval
+        hijack: true
+        expr: return require("liuli.custom").del_smart()
+
+    uni:
+      - type: eval
+        hijack: true
+        expr: return require("liuli.custom").unicode()
+
+    u:
+      - type: eval
+        hijack: true
+        expr: return require("liuli.custom").unicode()
+
+    dist:
+      - type: eval
+        expr: return require("liuli.custom").librime_version()
+      - type: eval
+        expr: return require("liuli.custom").librime_dist_info()
+
+    ver:
+      - type: eval
+        expr: return require("liuli.custom").ll_version()
+
+  # 自定義捷徑
+  # 在有輸入框的條件下, 按 `Ctrl` 組合鍵觸發
+  accel:
+    # ctrl-k 嵌入编码截图
+    # 僅支持 linux-wayland 和 mac 環境
+    # linux-wayland: 依賴 pango 和 wl-clipboard
+    # mac: 依賴 pango 和 impbcopy
+    - key: 0x6b
+      type: eval
+      expr: return require("liuli.custom").capture_embeded()
+    # ctrl-0 上屏嵌入编码
+    - key: 0x30
+      type: eval
+      expr: return require("liuli.custom").commit_embeded()
+
+# 嵌入候選的顯示配置
+# 默認顯示效果爲:
+# 💎 琉 »璃« [kmt] ~篱² ~籓³
+embeded_cands:
+  index_indicators: [ ¹, ², ³, ⁴, ⁵, ⁶, ⁷, ⁸, ⁹, ⁰ ]       # 嵌入候選的序號顯示格式
+  # first_format: "💎 ${Stash} ›${Code}‹【${候選}${Comment}】¹"
+  # first_format: "❦ ${Stash} ❝${Code}❞【${候選}${Comment}】¹"
+  # first_format: "💎 ${Stash} [${Code}] ▶ ${候選} ${Comment}"
+  # first_format: "💎 ${Stash} »${候選}« [${Code}]${Comment}"
+  # first_format: "💎 ${Stash}⦗${候選}⦘[${Code}]${Comment}"
+  # first_format: "💎 ${Stash}👉${候選}👈⦗${Code}⦘${Comment}"
+  # first_format: "${Stash} ${候選}⦗${Code}⦘${Comment}"
+  # next_format: "${Stash}[${候選}${Comment}]${Seq}"
+  # next_format: "${Stash} ❧ [${候選}${Comment}]${Seq}"
+  # first_format: "${Stash}${Code}${候選}"
+  # first_format: "${Stash}[${候選}${Seq}]${Code}${Comment}" # 首選的渲染格式
+  # next_format: "${Stash}${候選}${Seq}${Comment}"           # 非首選的渲染格式
+  first_format: "${Stash}${Code}${候選}"
+  next_format: ""
+  separator: " "                                           # 候選之間的分隔符
+  stash_placeholder: "+"                                   # 非首選的延遲串占位符, 支持 ${Stash} 變量
+
+# 标点
+punctuator:
+  import_preset: symbols
+
+  half_shape:
+    '<': '《'
+    '>': '》'
+    '\': '、'
+    '`': '`'
+    '~': '~'
+    '@': '@'
+    '#': '#'
+    '%': '%'
+    '$': '¥'
+    '*': '*'
+    '=': '='
+    '[': '「'
+    ']': '」'
+    '{': '『'
+    '}': '』'
+
+  symbols:
+    __append:
+      '/tab': '	'
+
+key_binder:
+  bindings:
+    # 空格清空错码
+    - { when: has_menu, accept: space, send: space }
+    - { when: composing, accept: space, send: Escape }
+    # 减号、等号翻页
+    - { when: paging, accept: minus, send: Page_Up }
+    - { when: has_menu, accept: equal, send: Page_Down }
+    # 选重
+    - {when: has_menu, accept: semicolon, send: 2}
+    - {when: has_menu, accept: apostrophe, send: 3}
+    - { when: has_menu, accept: 9, send: 2 }
+    - { when: has_menu, accept: 8, send: 3 }
+    - { when: has_menu, accept: 7, send: 4 }
+    - { when: has_menu, accept: 6, send: 5 }
+    # 简转繁
+    - { when: always, accept: "Control+Shift+F", toggle: traditionalization }
+    # 拆分提示
+    - { when: has_menu, accept: "Control+Shift+C", toggle: division }
+    - { when: has_menu, accept: "/", toggle: division }
+    # 字集切換
+    - { when: has_menu, accept: "0", toggle: charset.all }
+    # 内嵌候選開關
+    - { when: always, accept: "Control+Shift+E", toggle: embeded_cands }
+    # 中英文标点
+    - {when: always, accept: Control+period, toggle: ascii_punct}
+
+recognizer:
+  patterns:
+    # 特殊符號
+    symbols: "^/([0-9]0?|[A-Za-z]+)$"
+    # 拼音反查模式
+    reverse_lookup: "^`[a-z]+$"
+    # 單獨反引號
+    grave: "^`$"
+    # 宏
+    macro_calc: "^/calc(/[a-zA-Z0-9\\+\\-\\*\\(\\)\\^\\.%]*)*$"
+    macro_smart: "^/(addsmart|delsmart|a|d)(/[a-zA-Z0-9]*)*$"
+    macro_unicode: "^/(uni|u)(/[a-zA-Z0-9]*)*$"
+
+menu:
+  page_size: 5
+
+ascii_composer:
+  switch_key:
+    # 左Shift上屏编码  右Shift上屏候选
+    Shift_L: commit_code
+    Shift_R: commit_text
+    Control_L: noop
+    Control_R: noop
+    Caps_Lock: clear
+    Eisu_toggle: clear
+
+editor:
+  bindings:
+    # 回车清空编码
+    Return: cancel
